@@ -40,6 +40,7 @@ class Speaker extends Model
                 ->maxLength(255),
             CheckboxList::make('qualifications')
                 ->searchable()
+                ->columnSpanFull()
                 ->bulkToggleable()
                 ->options([
                     'bussiness-leader' => 'Business Leader',
@@ -52,7 +53,12 @@ class Speaker extends Model
                     'youtube-influencer' => 'YouTube Influencer',
                     'open-source-contributor' => 'Open Source Contributor',
                     'unique-perspective' => 'Unique Perspective',
-                ])->columns(3),
+                ])
+                ->descriptions([
+                    'bussiness-leader' => 'Here is a nice long description',
+                    'charisma' => 'Here is a nice long description',
+                ])
+                ->columns(3),
         ];
     }
 }

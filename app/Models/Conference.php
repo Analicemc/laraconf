@@ -3,10 +3,23 @@
 namespace App\Models;
 
 use App\Enums\Region;
+use Filament\Forms\Components\Builder;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Get;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Toggle;
 
 class Conference extends Model
 {
@@ -43,5 +56,82 @@ class Conference extends Model
     public function talks(): BelongsToMany
     {
         return $this->belongsToMany(Talk::class);
+    }
+
+    // for more layout examples https://filamentphp.com/docs/3.x/forms/layout/getting-started
+    public static function getForm()
+    {
+        return [
+            Section::make('Conference Details')
+                //->aside()
+                ->collapsible()
+                ->icon('heroicon-o-information-circle')
+                ->description('Provide the details of the conference.')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->default('My Conference')
+                        ->label('Conference Name')
+                        ->markAsRequired()
+                        ->required()
+                        ->helperText('Please enter the name of the conference.')
+                        ->hint('The name of the conference.')
+                        ->hintIcon('heroicon-o-information-circle')
+                        ->hintAction(new Action('https://example.com'))
+                        // ->rules(['max:255', new CustomRule()])
+                        ->maxLength(60)
+                        ->columnSpanFull(),
+                    MarkdownEditor::make('description')
+                        ->required()
+                        ->columnSpanFull(),
+                    TextInput::make('website')
+                        ->label('Website')
+                        ->prefix('https://')
+                        ->hint('The link to the conference website.')
+                        ->hintIcon('heroicon-o-link')
+                        ->url()
+                        ->columnSpanFull(), // or columnSpan(2)
+                    DateTimePicker::make('start_date')
+                        ->default(now())
+                        ->required(),
+                    DateTimePicker::make('end_date')
+                        ->required(),
+                ]),
+            Section::make('Location')
+                ->description('Fill in the details of the location.')
+                ->columns(2)
+                ->schema([
+                    Select::make('region')
+                        ->live()
+                        ->options(Region::class)
+                        ->enum(Region::class),
+                    Select::make('venue_id')
+                        ->searchable()
+                        ->preload()
+                        ->editOptionForm(Venue::getForm())
+                        ->createOptionForm(Venue::getForm())
+                        ->hint('Select region first')
+                        ->hintIcon('heroicon-o-information-circle')
+                        ->relationship('venue', 'name', modifyQueryUsing: fn(\Illuminate\Database\Eloquent\Builder $query, Get $get) => $query->where('region', $get('region'))),
+                    Fieldset::make('Status')
+                        ->columns(1)
+                        ->schema([
+                            Select::make('status')
+                            ->options([
+                                'draft' => 'Draft',
+                                'published' => 'Published',
+                                'archived' => 'Archived',
+                                ])
+                                ->required(),
+                                Toggle::make('is_published')
+                                    ->label('Is Published')
+                                    ->default(true),
+                        ])
+                ]),
+            CheckboxList::make('speakers')
+                ->relationship('speakers', 'name')
+                ->options(Speaker::all()->pluck('name', 'id'))
+                ->required()
+        ];
     }
 }

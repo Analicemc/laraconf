@@ -6,6 +6,7 @@ use App\Enums\Region;
 use App\Filament\Resources\ConferenceResource\Pages;
 use App\Filament\Resources\ConferenceResource\RelationManagers;
 use App\Models\Conference;
+use App\Models\Speaker;
 use App\Models\Venue;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -26,56 +27,7 @@ class ConferenceResource extends Resource
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->default('My Conference')
-                    ->label('Conference Name')
-                    ->markAsRequired()
-                    ->required()
-                    ->helperText('Please enter the name of the conference.')
-                    ->hint('The name of the conference.')
-                    ->hintIcon('heroicon-o-information-circle')
-                    ->hintAction(new Action('https://example.com'))
-                    // ->rules(['max:255', new CustomRule()])
-                    ->maxLength(60),
-                Forms\Components\RichEditor::make('description')
-                    ->disableToolbarButtons(['italic'])
-                    ->required(),
-                Forms\Components\TextInput::make('website')
-                    ->label('Website')
-                    ->prefix('https://')
-                    ->hint('The link to the conference website.')
-                    ->hintIcon('heroicon-o-link')
-                    ->url(),
-                Forms\Components\DateTimePicker::make('start_date')
-                    ->default(now())
-                    ->required(),
-                Forms\Components\DateTimePicker::make('end_date')
-                    ->required(),
-                Forms\Components\Checkbox::make('is_published')
-                    ->default(true),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'draft' => 'Draft',
-                        'published' => 'Published',
-                        'archived' => 'Archived',
-                    ])
-                    ->required(),
-                Forms\Components\Select::make('region')
-                    ->live()
-                    ->options(Region::class)
-                    ->enum(Region::class),
-                Forms\Components\Select::make('venue_id')
-                ->searchable()
-                ->preload()
-                ->editOptionForm(Venue::getForm())
-                ->createOptionForm(Venue::getForm())
-                ->hint('Select region first')
-                ->hintIcon('heroicon-o-information-circle')
-                ->relationship('venue', 'name', modifyQueryUsing: function (Builder $query, Forms\Get $get) {
-                    return $query->where('region', $get('region'));
-                })
-            ]);
+            ->schema(Conference::getForm());
     }
 
     public static function table(Table $table): Table
