@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Enums\Region;
+use App\Enums\ConferenceStatus;
+use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Get;
@@ -40,6 +42,7 @@ class Conference extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'region' => Region::class,
+        'status' => ConferenceStatus::class,
         'venue_id' => 'integer',
     ];
 
@@ -90,7 +93,8 @@ class Conference extends Model
                         ->hint('The link to the conference website.')
                         ->hintIcon('heroicon-o-link')
                         ->url()
-                        ->columnSpanFull(), // or columnSpan(2)
+                        ->required()
+                        ->columnSpanFull(),
                     DateTimePicker::make('start_date')
                         ->default(now())
                         ->required(),
@@ -98,11 +102,14 @@ class Conference extends Model
                         ->required(),
                 ]),
             Section::make('Location')
+                ->collapsible()
                 ->description('Fill in the details of the location.')
+                ->icon('heroicon-o-map')
                 ->columns(2)
                 ->schema([
                     Select::make('region')
                         ->live()
+                        ->required()
                         ->options(Region::class)
                         ->enum(Region::class),
                     Select::make('venue_id')
@@ -117,21 +124,45 @@ class Conference extends Model
                         ->columns(1)
                         ->schema([
                             Select::make('status')
-                            ->options([
-                                'draft' => 'Draft',
-                                'published' => 'Published',
-                                'archived' => 'Archived',
-                                ])
+                                ->options(ConferenceStatus::class)
+                                ->enum(ConferenceStatus::class)
                                 ->required(),
-                                Toggle::make('is_published')
-                                    ->label('Is Published')
-                                    ->default(true),
+                            Toggle::make('is_published')
+                                ->label('Is Published')
+                                ->default(true),
                         ])
                 ]),
-            CheckboxList::make('speakers')
-                ->relationship('speakers', 'name')
-                ->options(Speaker::all()->pluck('name', 'id'))
-                ->required()
+            Section::make('Speakers')
+                ->collapsible()
+                ->description('Select the speakers for the conference.')
+                ->icon('heroicon-o-chat-bubble-oval-left')
+                ->schema([
+                    CheckboxList::make('speakers')
+                        ->columnSpanFull()
+                        ->label('')
+                        ->relationship('speakers', 'name')
+                        ->options(Speaker::all()->pluck('name', 'id'))
+                        ->required()
+                        ->columns(4),
+                ]),
+            Actions::make(
+                [Action::make('star')
+                    ->icon('heroicon-o-plus')
+                    ->label('Create Fake Data')
+                    ->action(function ($livewire) {
+                        $data = Conference::factory()->make()->toArray();
+                        unset($data['id'], $data['venue_id']);
+                        $livewire->form->fill($data);
+                    })
+                    ->visible(function(string $operation){
+                        if($operation !== 'create')
+                            return false;
+                        if(! app()->environment('local'))
+                            return false;
+                        return true;
+                    })]
+
+            )
         ];
     }
 }
