@@ -7,11 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Enums\Region;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Venue extends Model
+class Venue extends Model implements HasMedia
 {
     use HasFactory;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -46,8 +50,12 @@ class Venue extends Model
                 ->required()
                 ->maxLength(255),
             Select::make('region')
+                ->required()
                 ->options(Region::class)
                 ->enum(Region::class),
+            SpatieMediaLibraryFileUpload::make('images')
+                ->collection('venue-images')
+                ->multiple()
         ];
     }
 }

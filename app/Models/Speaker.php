@@ -3,15 +3,29 @@
 namespace App\Models;
 
 use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Speaker extends Model
+class Speaker extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'bio',
+        'twitter_handle',
+        'avatar',
+        'qualifications',
+    ];
 
     protected $casts = [
         'qualifications' => 'array',
@@ -22,21 +36,40 @@ class Speaker extends Model
         return $this->belongsToMany(Conference::class);
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('speaker-images')
+            ->useDisk('public');
+    }
+
     public static function getForm()
     {
         return [
             TextInput::make('name')
                 ->required()
                 ->maxLength(255),
+            /*FileUpload::make('avatar')
+                ->avatar()
+                ->directory('avatars')
+                ->imageEditor()
+                ->image()
+                ->getUploadedFileNameForStorageUsing(
+                    fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
+                        ->prepend('avatar-'),
+                )
+                ->maxSize(1024 * 1024 * 10), // 10MB*/
+            SpatieMediaLibraryFileUpload::make('avatar')
+                ->previewable()
+                ->downloadable()
+                ->collection('speaker-images')
+                ->image(),
             TextInput::make('email')
                 ->email()
                 ->required()
                 ->maxLength(255),
             Textarea::make('bio')
-                ->required()
                 ->columnSpanFull(),
             TextInput::make('twitter_handle')
-                ->required()
                 ->maxLength(255),
             CheckboxList::make('qualifications')
                 ->searchable()

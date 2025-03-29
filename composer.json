@@ -20,7 +20,8 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.3",
-        "filament/filament": "^3.2.0"
+        "filament/filament": "^3.2.0",
+        "filament/spatie-laravel-media-library-plugin": "^3.0-stable"
     },
     "autoload": {
         "psr-4": {
