@@ -7,10 +7,12 @@ use App\Enums\TalkStatus;
 use App\Filament\Resources\TalkResource\Pages;
 use App\Filament\Resources\TalkResource\RelationManagers;
 use App\Models\Talk;
+use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
@@ -19,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 
@@ -133,11 +136,53 @@ class TalkResource extends Resource
                     })
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->slideOver(),
+                Tables\Actions\ActionGroup::make([
+
+                    Tables\Actions\Action::make('approve')
+                        ->action(function (Talk $record) {
+                            $record->approve();
+                        })->after(
+                            fn() => Notification::make()->success()->title('This talk was approved')
+                                ->body('The speaker has been notified')
+                                ->icon('heroicon-o-check-circle')
+                                ->color('success')
+                                ->send()
+                        )
+                        ->icon('heroicon-o-check-circle')
+                        ->visible(function (Talk $record) {
+                            return $record->status === TalkStatus::SUBMITTED;
+                        })
+                        ->color('success'),
+                    Tables\Actions\Action::make('reject')
+                        ->action(function (Talk $record) {
+                            $record->reject();
+                        })->after(
+                            fn() => Notification::make()->danger()->title('This talk was rejected')
+                                ->body('The speaker has been notified')
+                                ->icon('heroicon-o-no-symbol')
+                                ->color('danger')
+                                ->send()
+                        )
+                        ->visible(function (Talk $record) {
+                            return $record->status === TalkStatus::SUBMITTED;
+                        })
+                        ->requiresConfirmation()
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('danger'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\BulkAction::make('approve')
+                        ->action(function (Collection $records) {
+                            $records->each->approve();
+                        })
+                        ->color('success')
+                        // ->icon('heroicon-o-check-circle')
                 ]),
             ]);
     }
