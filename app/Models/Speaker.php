@@ -27,6 +27,19 @@ class Speaker extends Model implements HasMedia
         'qualifications',
     ];
 
+    const QUALIFICATIONS = [
+        'bussiness-leader' => 'Business Leader',
+        'charisma' => 'Charisma Speaker',
+        'first-time-speaker' => 'First Time Speaker',
+        'hometown-hero' => 'Hometown Hero',
+        'humanitarian' => 'Humanitarian',
+        'laracasts-contributor' => 'Laracasts Contributor',
+        'twitter-influencer' => 'Twitter Influencer',
+        'youtube-influencer' => 'YouTube Influencer',
+        'open-source-contributor' => 'Open Source Contributor',
+        'unique-perspective' => 'Unique Perspective',
+    ]; 
+
     protected $casts = [
         'qualifications' => 'array',
     ];
@@ -48,16 +61,6 @@ class Speaker extends Model implements HasMedia
             TextInput::make('name')
                 ->required()
                 ->maxLength(255),
-            /*FileUpload::make('avatar')
-                ->avatar()
-                ->directory('avatars')
-                ->imageEditor()
-                ->image()
-                ->getUploadedFileNameForStorageUsing(
-                    fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
-                        ->prepend('avatar-'),
-                )
-                ->maxSize(1024 * 1024 * 10), // 10MB*/
             SpatieMediaLibraryFileUpload::make('avatar')
                 ->previewable()
                 ->downloadable()
@@ -75,18 +78,7 @@ class Speaker extends Model implements HasMedia
                 ->searchable()
                 ->columnSpanFull()
                 ->bulkToggleable()
-                ->options([
-                    'bussiness-leader' => 'Business Leader',
-                    'charisma' => 'Charisma Speaker',
-                    'first-time-speaker' => 'First Time Speaker',
-                    'hometown-hero' => 'Hometown Hero',
-                    'humanitarian' => 'Humanitarian',
-                    'laracasts-contributor' => 'Laracasts Contributor',
-                    'twitter-influencer' => 'Twitter Influencer',
-                    'youtube-influencer' => 'YouTube Influencer',
-                    'open-source-contributor' => 'Open Source Contributor',
-                    'unique-perspective' => 'Unique Perspective',
-                ])
+                ->options(self::QUALIFICATIONS)
                 ->descriptions([
                     'bussiness-leader' => 'Here is a nice long description',
                     'charisma' => 'Here is a nice long description',
