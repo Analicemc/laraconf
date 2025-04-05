@@ -14,6 +14,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -74,6 +77,7 @@ class TalkResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->persistFiltersInSession()
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->searchable()
@@ -114,7 +118,19 @@ class TalkResource extends Resource
                 //     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                TernaryFilter::make('new_talk'),
+                SelectFilter::make('speaker_id')
+                    ->relationship('speaker', 'name')
+                    ->multiple()
+                    ->preload(),
+                Filter::make('has_avatar')
+                    ->label('Show only speakers with avatar')
+                    ->toggle()
+                    ->modifyQueryUsing(function ($query) {
+                        return $query->whereHas('speaker', function ($query2) {
+                            return $query2->whereNotNull('avatar');
+                        });
+                    })
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

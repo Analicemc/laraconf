@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\TalkResource\Pages;
 
+use App\Enums\TalkStatus;
 use App\Filament\Resources\TalkResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Resources\Pages\ListRecords\Tab;
 
 class ListTalks extends ListRecords
 {
@@ -15,5 +17,13 @@ class ListTalks extends ListRecords
         return [
             Actions\CreateAction::make(),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ['all' => Tab::make('All talks'),
+            'approved' => Tab::make('Aproved')->modifyQueryUsing(function($query){
+                return $query->where('status', TalkStatus::APPROVED);
+            })];
     }
 }
